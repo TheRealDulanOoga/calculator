@@ -1,17 +1,17 @@
 
-# TODO Add support for float inputs
 # TODO Add support for parentheses
-# TODO Add support for directly inputting roots (not to the power of a fraction)
+# TODO (maybe) Add support for directly inputting roots (instead of "to the power of a fraction")
 
 # TODO Add support for simplifying expressions with variables
 
 # TODO Add support for solving equations with variables
 
-
 def organizeEquation(expression):
+    if len(expression) == 1:
+        return expression
     outputExpression = []
     seperatorCharIndexList = []
-    temporaryStringStorage = ""
+    temporaryStringStorage = ''
     for i in enumerate(expression):
         index = i[0]
         char = i[1]
@@ -22,29 +22,37 @@ def organizeEquation(expression):
     for i in enumerate(seperatorCharIndexList):
         listIndex = i[0]
         storedIndex = i[1]
-        valueRangeIdentifier = listIndex - 1 > -1
+        valueRangeIdentifier = listIndex > 0
         valueRangeFloor = 0
         if valueRangeIdentifier:
             valueRangeFloor = seperatorCharIndexList[listIndex - 1] + 1
         for j in range(valueRangeFloor, storedIndex):
             temporaryStringStorage += expression[j]
+        if temporaryStringStorage == '':
+            temporaryStringStorage = '0'
         outputExpression.extend([
             int(temporaryStringStorage),
             expression[storedIndex]
         ])
-        temporaryStringStorage = ""
+        temporaryStringStorage = ''
     for i in range(seperatorCharIndexList[-1] + 1, len(expression)):
         temporaryStringStorage += expression[i]
+    if temporaryStringStorage == '':
+        temporaryStringStorage = '0'
     outputExpression.append(int(temporaryStringStorage))
     return outputExpression
 
 
-def operationFunction(sign, expression):
+def operations(sign, expression):
     while sign in expression:
         indexOfSign = expression.index(sign)
-        valueOne = int(expression[indexOfSign - 1])
-        valueTwo = int(expression[indexOfSign + 1])
+        valueOne = expression[indexOfSign - 1]
+        valueTwo = expression[indexOfSign + 1]
         match sign:
+            case '.':
+                if not isinstance(valueOne, int):
+                    valueOne = 0
+                calculatedValue = float(str(valueOne) + "." + str(valueTwo))
             case '+':
                 calculatedValue = valueOne + valueTwo
             case '-':
@@ -55,21 +63,23 @@ def operationFunction(sign, expression):
                 calculatedValue = valueOne / valueTwo
             case '^':
                 calculatedValue = valueOne ** valueTwo
+        if calculatedValue % 1 == 0.0:
+            calculatedValue = int(calculatedValue)
         expression[indexOfSign - 1] = calculatedValue
         expression.pop(indexOfSign)
         expression.pop(indexOfSign)
     return expression
 
 
-def doOperations(signs, expression):
-    for i in enumerate(signs):
-        sign = i[1]
-        expression = operationFunction(sign, expression)
+def doAllOperations(signs, expression):
+    for sign in signs:
+        expression = operations(sign, expression)
     return expression
 
 
-# In the order of (P)EMDAS
+# In the order of (P)EMDAS plus decimals
 operators = [
+    '.',
     '^',
     '*',
     '/',
@@ -79,6 +89,5 @@ operators = [
 
 inputEquation = input("Equation: ").replace(' ', '')
 arrayEquation = list(inputEquation)
-
 organizedEquation = organizeEquation(arrayEquation)
-print(doOperations(operators, organizedEquation))
+print(doAllOperations(operators, organizedEquation)[0])
